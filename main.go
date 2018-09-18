@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"strings"
 )
 
 func main() {
@@ -34,6 +35,6 @@ func main() {
 		log.Fatalf("could not generate randomness: %v", err)
 	}
 
-	// Print random srv name
-	fmt.Print(addrs[r.Int64()].Target)
+	// Print random srv name and trim trailing dot from output
+	fmt.Print(strings.TrimSuffix(addrs[r.Int64()].Target, "."))
 }

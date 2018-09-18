@@ -1,0 +1,40 @@
+language: go
+sudo: false
+matrix:
+  include:
+  - go: 1.x
+    env: LATEST=true
+  - go: 1.7.x
+  - go: 1.8.x
+  - go: 1.9.x
+  - go: 1.10.x
+  - go: 1.11.x
+  - go: tip
+  allow_failures:
+  - go: tip
+before_install:
+- go get github.com/mitchellh/gox
+script:
+- go get -t -v ./...
+- diff -u <(echo -n) <(gofmt -d .)
+- go vet $(go list ./... | grep -v /vendor/)
+- go test -v -race ./...
+- if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="{{.Dir}}.{{.OS}}.{{.Arch}}"
+  -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: "ey1MTuC3mniHwlvIr7+6v/dsI89NWvVlrLe2R3I/KBb7IX7sHAzi3UZEwvLURHaEAaexVGYrD4YMB+3QkYAqotyljb16WGKQpMlaDTCwc6RQtlr0LyIUbsmzwQJvT2z/iJjrqv7eDpCXB1XyJ6dd7CtO9XD+FIOgAahMBKbsAgcv9G/WSoWqbcke5Zc2/gHMf/Aponu3DPKUkGQpsDeffe2CbuOVZyIshs9LLlLVYNGF5dRrZ0uYyhnibDI0bbwpS/3b3JC6PoY/cjHTVznYwPAt6G4JoGGukK9xydMe11Ui9fIa/kzCaOMkrEK/6UGVQsLhkLXOd0ST90AffYQXCQiN10VQAYaXE10OQo3ltnodba0cUNAoJueYT4lxj+fph1todX8tP7zVRyM8UhUH3Z7pcJ2hovpWOENAQtpRkdH+psZsyr6ersq8ZPAb3s4xh9VcKOZ7oQMG4Dur4KueAILCm30HAnpyQtQsWLj7SNtuXshRdo3PK6UIqbgKiv+Lgo72EpP2ylf7ApPll63wMct9Pg5OkSZBljkWbkqul67jcLyXsI9wvWxu67m4Cg39e2nlJOt0qnyKJ6rylozyyJ5as6qV63n2eHDGF1Ul/aeuj9C8OuxkuvUBpRHSFiNVrD+cE4LnOJHpxLp//QuisfN5zPmz+HfzvblGNqx1GD4="
+  file:
+  # The names of the binaries to output, based on the -output template passed to gox.
+  - dnsrand.windows.amd64.exe
+  - dnsrand.darwin.amd64
+  - dnsrand.linux.amd64
+  on:
+    repo: svenbs/dnsrand
+    # Only build binaries for tagged commits
+    tags: true
+    condition: $LATEST = true
